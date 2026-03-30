@@ -20,8 +20,10 @@ CMD ["php-fpm"]
 
 FROM app_base AS app_prod
 
+ENV APP_ENV=prod
+
 COPY . /var/www/html
-RUN composer install --no-dev --optimize-autoloader --no-interaction \
+RUN composer install --no-dev --optimize-autoloader --no-interaction --no-scripts \
     && php bin/console cache:clear --env=prod \
     && php bin/console cache:warmup --env=prod
 
