@@ -20,7 +20,8 @@ CMD ["php-fpm"]
 
 FROM app_base AS app_prod
 
-ENV APP_ENV=prod
+ENV APP_ENV=prod \
+    COMPOSER_ALLOW_SUPERUSER=1
 
 COPY . /var/www/html
 RUN composer install --no-dev --optimize-autoloader --no-interaction --no-scripts \
