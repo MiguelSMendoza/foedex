@@ -1,0 +1,40 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Foedex | {{ is_edit ? 'Editar página' : 'Nueva página' }}{% endblock %}
+
+{% block body %}
+    {% include 'components/_nav.html.twig' %}
+    <main class="container page-shell">
+        {% include 'components/_flash.html.twig' %}
+        <div class="grid editor-layout">
+            <section class="panel">
+                <h1>{{ is_edit ? 'Editar página' : 'Crear página' }}</h1>
+                {{ form_start(form) }}
+                    {{ form_row(form.title) }}
+                    {{ form_row(form.slug) }}
+                    {{ form_row(form.excerpt) }}
+                    {{ form_row(form.categories) }}
+                    {{ form_row(form.newCategories) }}
+                    {{ form_row(form.changeSummary) }}
+                    {{ form_row(form.markdown) }}
+                    <button class="button" type="submit">{{ is_edit ? 'Guardar cambios' : 'Crear página' }}</button>
+                {{ form_end(form) }}
+            </section>
+
+            <aside class="panel">
+                <h2>Ayuda Markdown</h2>
+                <pre class="help-block"># Título
+## Subtítulo
+- lista
+[enlace](https://example.com)
+```php
+echo 'hola';
+```</pre>
+                {% if preview_html %}
+                    <h2>Vista previa actual</h2>
+                    <div class="markdown-body">{{ preview_html|raw }}</div>
+                {% endif %}
+            </aside>
+        </div>
+    </main>
+{% endblock %}

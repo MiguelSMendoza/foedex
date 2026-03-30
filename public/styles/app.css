@@ -1,0 +1,264 @@
+:root {
+    --bg: #f3efe6;
+    --panel: #fffdf8;
+    --ink: #1e1a14;
+    --muted: #71685d;
+    --line: #d7cdbd;
+    --brand: #0c6b58;
+    --brand-soft: #dff2ed;
+    --accent: #b9582e;
+    --danger: #b53b31;
+    --shadow: 0 24px 60px rgba(35, 28, 18, 0.08);
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: Georgia, "Times New Roman", serif;
+    color: var(--ink);
+    background:
+        radial-gradient(circle at top left, rgba(12, 107, 88, 0.12), transparent 25%),
+        linear-gradient(180deg, #f6f1e7 0%, #efe7d8 100%);
+}
+
+a {
+    color: var(--brand);
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+.container {
+    width: min(1120px, calc(100% - 2rem));
+    margin: 0 auto;
+}
+
+.site-header {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    backdrop-filter: blur(10px);
+    background: rgba(246, 241, 231, 0.88);
+    border-bottom: 1px solid rgba(113, 104, 93, 0.12);
+}
+
+.nav-shell {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem 0;
+}
+
+.brand {
+    font-size: 1.5rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+}
+
+.nav-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.page-shell {
+    padding: 2rem 0 3rem;
+}
+
+.narrow {
+    width: min(720px, calc(100% - 2rem));
+}
+
+.hero,
+.grid {
+    display: grid;
+    gap: 1.5rem;
+}
+
+.hero {
+    grid-template-columns: 2fr 1fr;
+    margin-bottom: 2rem;
+}
+
+.two-columns {
+    grid-template-columns: 2fr 1fr;
+}
+
+.editor-layout {
+    grid-template-columns: 1.7fr 1fr;
+}
+
+.panel {
+    background: var(--panel);
+    border: 1px solid rgba(113, 104, 93, 0.18);
+    border-radius: 24px;
+    padding: 1.5rem;
+    box-shadow: var(--shadow);
+}
+
+.panel-header,
+.article-head,
+.meta-row,
+.inline-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+}
+
+.article-head,
+.panel-header {
+    margin-bottom: 1rem;
+}
+
+.meta-row {
+    flex-wrap: wrap;
+    color: var(--muted);
+    font-size: 0.95rem;
+}
+
+.hero h1,
+h1,
+h2,
+h3 {
+    line-height: 1.1;
+    margin: 0 0 0.75rem;
+}
+
+.hero h1 {
+    font-size: clamp(2.5rem, 5vw, 4.2rem);
+}
+
+.hero-copy,
+.lead,
+.empty-state {
+    color: var(--muted);
+}
+
+.eyebrow {
+    margin: 0 0 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    font-size: 0.8rem;
+    color: var(--accent);
+}
+
+.stack-list {
+    display: grid;
+    gap: 1rem;
+}
+
+.list-card {
+    padding: 1rem 1.1rem;
+    border-radius: 18px;
+    border: 1px solid var(--line);
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(250, 245, 236, 0.95));
+}
+
+.tag-cloud {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+.tag,
+.button,
+button {
+    border-radius: 999px;
+    padding: 0.7rem 1rem;
+    border: none;
+    font: inherit;
+}
+
+.tag {
+    background: var(--brand-soft);
+    color: var(--brand);
+}
+
+.tag-large {
+    font-size: 1.05rem;
+}
+
+.button,
+button {
+    background: var(--brand);
+    color: white;
+    cursor: pointer;
+}
+
+.button-secondary {
+    background: #ece3d4;
+    color: var(--ink);
+}
+
+.search-card input,
+form input,
+form textarea,
+form select {
+    width: 100%;
+    margin: 0.4rem 0 1rem;
+    padding: 0.85rem 0.95rem;
+    border-radius: 14px;
+    border: 1px solid var(--line);
+    background: white;
+    font: inherit;
+}
+
+.flash {
+    margin-bottom: 1rem;
+    padding: 0.9rem 1rem;
+    border-radius: 14px;
+}
+
+.flash-success {
+    background: #e4f6ed;
+    color: #175f3e;
+}
+
+.flash-error {
+    background: #fde9e7;
+    color: var(--danger);
+}
+
+.markdown-body {
+    line-height: 1.7;
+    margin-top: 2rem;
+}
+
+.meta-row {
+    margin-top: 1.5rem;
+}
+
+.tag-cloud {
+    margin-top: 1.25rem;
+}
+
+.markdown-body pre,
+.diff-block,
+.help-block {
+    white-space: pre-wrap;
+    overflow: auto;
+    padding: 1rem;
+    border-radius: 16px;
+    background: #191713;
+    color: #f2ede4;
+    font-family: "SFMono-Regular", Consolas, monospace;
+}
+
+.article-panel {
+    margin-bottom: 1.5rem;
+}
+
+@media (max-width: 900px) {
+    .hero,
+    .two-columns,
+    .editor-layout {
+        grid-template-columns: 1fr;
+    }
+}

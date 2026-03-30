@@ -1,0 +1,8 @@
+.git
+.idea
+.phpunit.cache
+node_modules
+var/cache
+var/log
+var/*.db
+vendor

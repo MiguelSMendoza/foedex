@@ -1,0 +1,17 @@
+<header class="site-header">
+    <div class="container nav-shell">
+        <a class="brand" href="{{ path('app_home') }}">Foedex</a>
+        <nav class="nav-links">
+            <a href="{{ path('app_page_index') }}">Páginas</a>
+            <a href="{{ path('app_category_index') }}">Categorías</a>
+            {% if app.user %}
+                <a href="{{ path('app_page_new') }}">Nueva página</a>
+                <a href="{{ path('app_profile') }}">Perfil</a>
+                <a href="{{ path('app_logout') }}">Salir</a>
+            {% else %}
+                <a href="{{ path('app_login') }}">Entrar</a>
+                <a href="{{ path('app_register') }}">Registro</a>
+            {% endif %}
+        </nav>
+    </div>
+</header>

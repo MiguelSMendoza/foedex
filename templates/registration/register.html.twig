@@ -1,0 +1,18 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Foedex | Registro{% endblock %}
+
+{% block body %}
+    {% include 'components/_nav.html.twig' %}
+    <main class="container page-shell narrow">
+        <section class="panel">
+            <h1>Crear cuenta</h1>
+            {{ form_start(registrationForm) }}
+                {{ form_row(registrationForm.displayName) }}
+                {{ form_row(registrationForm.email) }}
+                {{ form_row(registrationForm.plainPassword) }}
+                <button class="button" type="submit">Registrarme</button>
+            {{ form_end(registrationForm) }}
+        </section>
+    </main>
+{% endblock %}

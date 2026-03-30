@@ -1,0 +1,32 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Foedex | Revisión #{{ revision.revisionNumber }}{% endblock %}
+
+{% block body %}
+    {% include 'components/_nav.html.twig' %}
+    <main class="container page-shell">
+        <section class="panel">
+            <div class="panel-header">
+                <h1>Revisión #{{ revision.revisionNumber }} de {{ page.currentTitle }}</h1>
+                <a class="button button-secondary" href="{{ path('app_page_history', {slug: page.currentSlug}) }}">Volver al historial</a>
+            </div>
+
+            <div class="meta-row">
+                <span>{{ revision.author.displayName }}</span>
+                <span>{{ revision.createdAt|date('d/m/Y H:i') }}</span>
+            </div>
+
+            {% if revision.changeSummary %}
+                <p>{{ revision.changeSummary }}</p>
+            {% endif %}
+
+            <h2>Contenido</h2>
+            <div class="markdown-body">{{ revision.htmlSnapshot|raw }}</div>
+
+            {% if diff %}
+                <h2>Diff</h2>
+                <pre class="diff-block">{{ diff }}</pre>
+            {% endif %}
+        </section>
+    </main>
+{% endblock %}

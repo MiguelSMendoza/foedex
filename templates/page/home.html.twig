@@ -1,0 +1,68 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Foedex | Inicio{% endblock %}
+
+{% block body %}
+    {% include 'components/_nav.html.twig' %}
+
+    <main class="container page-shell">
+        {% include 'components/_flash.html.twig' %}
+
+        <section class="hero">
+            <div>
+                <p class="eyebrow">Wiki colaborativa en Symfony</p>
+                <h1>Comparte conocimiento, enlaza ideas y mantén cada cambio bajo control.</h1>
+                <p class="hero-copy">Foedex es una base de conocimiento abierta entre usuarios autenticados, con páginas Markdown, categorías colaborativas e histórico restaurable.</p>
+            </div>
+
+            <form class="search-card" method="get">
+                <label for="q">Buscar en páginas</label>
+                <input id="q" type="search" name="q" value="{{ query }}" placeholder="Symfony, Docker, arquitectura...">
+                <button type="submit">Buscar</button>
+            </form>
+        </section>
+
+        <section class="grid two-columns">
+            <div class="panel">
+                <div class="panel-header">
+                    <h2>{% if query %}Resultados para "{{ query }}"{% else %}Páginas recientes{% endif %}</h2>
+                    {% if app.user %}
+                        <a class="button button-secondary" href="{{ path('app_page_new') }}">Crear página</a>
+                    {% endif %}
+                </div>
+
+                {% if pages is empty %}
+                    <p class="empty-state">Todavía no hay contenido que mostrar.</p>
+                {% else %}
+                    <div class="stack-list">
+                        {% for page in pages %}
+                            <article class="list-card">
+                                <h3><a href="{{ path('app_page_show', {slug: page.currentSlug}) }}">{{ page.currentTitle }}</a></h3>
+                                <p>{{ page.currentExcerpt ?: page.currentMarkdown|slice(0, 180) ~ '...' }}</p>
+                                <div class="meta-row">
+                                    <span>Actualizada por {{ page.lastEditedBy.displayName }}</span>
+                                    <span>{{ page.updatedAt|date('d/m/Y H:i') }}</span>
+                                </div>
+                            </article>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+
+            <aside class="panel">
+                <div class="panel-header">
+                    <h2>Categorías</h2>
+                    <a href="{{ path('app_category_index') }}">Ver todas</a>
+                </div>
+
+                <div class="tag-cloud">
+                    {% for category in categories %}
+                        <a class="tag" href="{{ path('app_category_show', {slug: category.slug}) }}">{{ category.name }}</a>
+                    {% else %}
+                        <p class="empty-state">Aún no hay categorías.</p>
+                    {% endfor %}
+                </div>
+            </aside>
+        </section>
+    </main>
+{% endblock %}

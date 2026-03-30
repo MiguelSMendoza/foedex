@@ -1,0 +1,19 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Foedex | Categorías{% endblock %}
+
+{% block body %}
+    {% include 'components/_nav.html.twig' %}
+    <main class="container page-shell">
+        <section class="panel">
+            <h1>Categorías</h1>
+            <div class="tag-cloud">
+                {% for category in categories %}
+                    <a class="tag tag-large" href="{{ path('app_category_show', {slug: category.slug}) }}">{{ category.name }}</a>
+                {% else %}
+                    <p class="empty-state">Todavía no hay categorías.</p>
+                {% endfor %}
+            </div>
+        </section>
+    </main>
+{% endblock %}

@@ -1,0 +1,18 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Foedex | Perfil{% endblock %}
+
+{% block body %}
+    {% include 'components/_nav.html.twig' %}
+    <main class="container page-shell narrow">
+        {% include 'components/_flash.html.twig' %}
+        <section class="panel">
+            <h1>Tu perfil</h1>
+            {{ form_start(profileForm) }}
+                {{ form_row(profileForm.displayName) }}
+                {{ form_row(profileForm.bio) }}
+                <button class="button" type="submit">Guardar perfil</button>
+            {{ form_end(profileForm) }}
+        </section>
+    </main>
+{% endblock %}

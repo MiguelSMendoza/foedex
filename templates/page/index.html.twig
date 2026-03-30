@@ -1,0 +1,27 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Foedex | Páginas{% endblock %}
+
+{% block body %}
+    {% include 'components/_nav.html.twig' %}
+    <main class="container page-shell">
+        <div class="panel">
+            <div class="panel-header">
+                <h1>Todas las páginas</h1>
+                {% if app.user %}
+                    <a class="button" href="{{ path('app_page_new') }}">Nueva página</a>
+                {% endif %}
+            </div>
+            <div class="stack-list">
+                {% for page in pages %}
+                    <article class="list-card">
+                        <h2><a href="{{ path('app_page_show', {slug: page.currentSlug}) }}">{{ page.currentTitle }}</a></h2>
+                        <p>{{ page.currentExcerpt ?: page.currentMarkdown|slice(0, 160) ~ '...' }}</p>
+                    </article>
+                {% else %}
+                    <p class="empty-state">No hay páginas todavía.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </main>
+{% endblock %}

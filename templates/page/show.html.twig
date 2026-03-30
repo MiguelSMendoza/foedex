@@ -1,0 +1,50 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Foedex | {{ page.currentTitle }}{% endblock %}
+
+{% block body %}
+    {% include 'components/_nav.html.twig' %}
+    <main class="container page-shell">
+        {% include 'components/_flash.html.twig' %}
+
+        <article class="panel article-panel">
+            <div class="article-head">
+                <div>
+                    <p class="eyebrow">{{ page.currentSlug }}</p>
+                    <h1>{{ page.currentTitle }}</h1>
+                    {% if page.currentExcerpt %}
+                        <p class="lead">{{ page.currentExcerpt }}</p>
+                    {% endif %}
+                </div>
+                <div class="article-actions">
+                    {% if app.user %}
+                        <a class="button" href="{{ path('app_page_edit', {slug: page.currentSlug}) }}">Editar</a>
+                    {% endif %}
+                    <a class="button button-secondary" href="{{ path('app_page_history', {slug: page.currentSlug}) }}">Historial</a>
+                </div>
+            </div>
+
+            <div class="meta-row">
+                <span>Creada por {{ page.createdBy.displayName }}</span>
+                <span>Última edición: {{ page.lastEditedBy.displayName }} el {{ page.updatedAt|date('d/m/Y H:i') }}</span>
+            </div>
+
+            <div class="tag-cloud">
+                {% for category in page.categories %}
+                    <a class="tag" href="{{ path('app_category_show', {slug: category.slug}) }}">{{ category.name }}</a>
+                {% else %}
+                    <span class="empty-state">Sin categorías</span>
+                {% endfor %}
+            </div>
+
+            <div class="markdown-body">{{ page.currentHtml|raw }}</div>
+        </article>
+
+        {% if latest_diff %}
+            <section class="panel">
+                <h2>Último diff</h2>
+                <pre class="diff-block">{{ latest_diff }}</pre>
+            </section>
+        {% endif %}
+    </main>
+{% endblock %}
