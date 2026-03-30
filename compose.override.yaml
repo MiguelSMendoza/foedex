@@ -1,7 +1,35 @@
 services:
+  app:
+    build:
+      context: .
+      target: app_dev
+    volumes:
+      - ./:/var/www/html
+    environment:
+      APP_ENV: dev
+      APP_SECRET: dev-secret-change-me
+      DATABASE_URL: mysql://foedex:foedex@db:3306/foedex?serverVersion=8.4.0&charset=utf8mb4
+      MESSENGER_TRANSPORT_DSN: doctrine://default?auto_setup=0
+
   web:
+    volumes:
+      - ./public:/var/www/html/public
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
     ports:
       - "8081:80"
+
+  worker:
+    build:
+      context: .
+      target: app_dev
+    command: php bin/console messenger:consume async -vv
+    volumes:
+      - ./:/var/www/html
+    environment:
+      APP_ENV: dev
+      APP_SECRET: dev-secret-change-me
+      DATABASE_URL: mysql://foedex:foedex@db:3306/foedex?serverVersion=8.4.0&charset=utf8mb4
+      MESSENGER_TRANSPORT_DSN: doctrine://default?auto_setup=0
 
   mailer:
     image: axllent/mailpit
