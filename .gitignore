@@ -18,3 +18,7 @@
 /public/assets/
 /assets/vendor/
 ###< symfony/asset-mapper ###
+
+# Local runtime data and private notes
+/memory/
+/public/uploads/
