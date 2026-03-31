@@ -2,13 +2,14 @@
 
 ## 1. Resumen técnico
 
-Aplicación web monolítica en Symfony con renderizado server-side, persistencia en MySQL y despliegue en contenedores Docker. La primera versión prioriza simplicidad operativa, trazabilidad de revisiones y una arquitectura clara basada en módulos de dominio.
+Aplicación web con backend API en Symfony, frontend React desacoplado, persistencia en MySQL y despliegue en contenedores Docker. La primera versión prioriza simplicidad operativa, trazabilidad de revisiones y una arquitectura clara basada en módulos de dominio.
 
 ## 2. Stack técnico
 
 - PHP 8.3
 - Symfony 8
-- Twig
+- React
+- Vite
 - Doctrine ORM
 - Doctrine Migrations
 - Symfony Security
@@ -21,9 +22,10 @@ Aplicación web monolítica en Symfony con renderizado server-side, persistencia
 
 ## 3. Estilo arquitectónico
 
-- Monolito modular.
-- Renderizado server-side con Twig.
-- Controladores finos.
+- Monolito modular en backend.
+- API HTTP JSON en Symfony para identidad, lectura, edición y categorías.
+- Frontend React servido como bundle estático.
+- Controladores finos en backend.
 - Casos de uso en servicios de aplicación.
 - Persistencia con Doctrine.
 - Mensajería para tareas secundarias.
@@ -42,13 +44,14 @@ Entidades previstas:
 
 ### 4.2 Knowledge
 
-Responsable de páginas, revisiones, slugs históricos y enlaces internos.
+Responsable de páginas, revisiones, slugs históricos, enlaces internos y media asociada.
 
 Entidades previstas:
 
 - `Page`
 - `PageRevision`
 - `PageSlugRedirect`
+- `MediaAsset`
 
 ### 4.3 Taxonomy
 
@@ -104,6 +107,7 @@ Notas:
 
 - `Page` representa el estado actual materializado.
 - El histórico completo vive en `PageRevision`.
+- Si no se recibe slug manual al crear, se genera automáticamente un identificador alfanumérico único de 12 caracteres.
 
 ### 5.3 PageRevision
 
@@ -162,6 +166,24 @@ Campos mínimos:
 - `createdAt`
 - `createdBy`
 
+### 5.8 MediaAsset
+
+Campos mínimos:
+
+- `id`
+- `page`
+- `kind` (`image` o `file`)
+- `originalFilename`
+- `storedFilename`
+- `publicPath`
+- `thumbnailPath` nullable
+- `mimeType`
+- `size`
+- `width` nullable
+- `height` nullable
+- `createdBy`
+- `createdAt`
+
 ## 6. Casos de uso clave
 
 ### 6.1 Registro de usuario
@@ -174,11 +196,13 @@ Campos mínimos:
 ### 6.2 Crear página
 
 1. Usuario autenticado abre formulario.
-2. Escribe título, slug, contenido y categorías.
-3. El sistema renderiza Markdown a HTML sanitizado.
-4. Se crea `Page`.
-5. Se crea `PageRevision` número 1.
-6. Se persisten relaciones actuales y snapshot de categorías.
+2. Escribe título, slug opcional, contenido y categorías.
+3. El backend rechaza títulos manuales de más de 60 caracteres.
+4. El sistema renderiza Markdown a HTML sanitizado.
+5. Si el slug llega vacío, se genera un código único de 12 caracteres.
+6. Se crea `Page`.
+7. Se crea `PageRevision` número 1.
+8. Se persisten relaciones actuales y snapshot de categorías.
 
 ### 6.3 Editar página
 
@@ -188,7 +212,17 @@ Campos mínimos:
 4. Se recalcula HTML sanitizado.
 5. Se actualiza `Page`.
 6. Se crea nueva `PageRevision`.
-7. Si cambia slug, se crea `PageSlugRedirect`.
+7. Si el slug llega vacío, se conserva el slug actual.
+8. Si cambia slug, se crea `PageSlugRedirect`.
+
+### 6.3B Archivar página
+
+1. Usuario autenticado pulsa borrar desde la portada.
+2. El frontend solo ofrece la acción si el usuario actual coincide con `createdBy`.
+3. El backend vuelve a comprobar que el actor es la persona creadora.
+4. La página pasa a `isArchived = true`.
+5. La página archivada deja de aparecer en portada, búsquedas, categorías y endpoints de lectura normales.
+6. El histórico permanece en base de datos para trazabilidad interna.
 
 ### 6.4 Restaurar revisión
 
@@ -197,15 +231,46 @@ Campos mínimos:
 3. Se copian snapshots a `Page`.
 4. Se crea nueva `PageRevision` marcando el origen restaurado.
 
+### 6.5 Captura rápida desde portada
+
+1. Usuario autenticado pega texto, enlace o sube un fichero desde la portada React.
+2. React envía la operación a un endpoint JSON sin recarga.
+3. Si es URL:
+   - el backend valida que la URL sea pública y segura
+   - descarga HTML limitado
+   - extrae `title`, `description` y `og:image`
+   - detecta reglas especiales por plataforma cuando aplica
+   - para YouTube deriva URL de embed estándar compatible y saneada
+   - trunca el título a 60 caracteres con puntos suspensivos si hace falta
+   - limpia textos
+   - genera Markdown base sin repetir el título como encabezado dentro del contenido
+4. Si es imagen:
+   - se valida tipo y tamaño
+   - se almacena con nombre seguro
+   - se genera thumbnail
+   - se crea página con imagen incrustada
+   - se registra `MediaAsset`
+5. Si es otro fichero permitido:
+   - se almacena con nombre seguro
+   - se crea página con enlace de descarga
+   - se registra `MediaAsset`
+6. El frontend actualiza la portada al vuelo con la nueva página.
+7. La portada obtiene más resultados mediante `offset`, `limit` y `hasMore`.
+
 ## 7. Seguridad
 
-- Autenticación basada en email y contraseña.
+- Autenticación basada en email y contraseña con sesión Symfony y endpoints JSON.
 - Hash de contraseña con algoritmo recomendado por Symfony.
 - CSRF en formularios mutantes.
 - Solo usuarios autenticados pueden mutar contenido.
 - Cualquier usuario autenticado puede editar cualquier página.
+- Solo la persona creadora de una página puede archivarla.
 - Sanitización estricta de HTML renderizado desde Markdown.
+- Postprocesado de enlaces renderizados para forzar apertura en pestaña nueva.
 - Limitación básica de intentos de login.
+- Validación estricta de URLs externas para evitar SSRF.
+- Lista blanca de tipos MIME y tamaños de subida.
+- Nombres de fichero seguros y persistencia controlada en `public/uploads`.
 
 ## 8. Markdown y renderizado
 
@@ -213,7 +278,10 @@ Campos mínimos:
 - Convertir Markdown a HTML en el backend.
 - Pasar el HTML por sanitización antes de persistirlo o servirlo.
 - Guardar Markdown original y HTML sanitizado.
+- El Markdown original solo se expone al frontend en contexto de editor autenticado.
+- Portada, listados y detalle de página consumen HTML ya interpretado, nunca Markdown crudo.
 - Añadir parser de enlaces internos estilo wiki en una segunda iteración si no entra limpio en MVP.
+- Las imágenes subidas se exponen además como media con thumbnail para vistas resumen y modal.
 
 ## 9. Historial y diff
 
@@ -231,7 +299,8 @@ MVP:
 
 - búsqueda simple con `LIKE` sobre título, extracto y contenido Markdown;
 - índices en columnas relevantes;
-- paginación.
+- paginación o limitación controlada desde API;
+- carga incremental en portada con `limit + 1` para calcular `hasMore`.
 
 Post-MVP:
 
@@ -239,7 +308,8 @@ Post-MVP:
 
 ## 11. UI y experiencia
 
-- SSR con Twig.
+- SPA React con `react-router-dom`.
+- Bundle frontend generado con Vite y servido desde `public/app`.
 - Layout responsive.
 - Formularios claros y accesibles.
 - Navegación principal:
@@ -248,7 +318,11 @@ Post-MVP:
   - categorías
   - crear página
   - perfil
-- Editor con preview y ayuda de sintaxis básica.
+- Editor con textarea Markdown y ayudas de sintaxis.
+- El frontend usa `fetch` con cookies de sesión contra `/api/*`.
+- La portada incluye un panel React de captura rápida con pegado, upload y drag-and-drop.
+- La portada muestra páginas completas una detrás de otra y usa infinity scroll.
+- El visor de imagen se resuelve en cliente con modal y descarga.
 
 ## 12. Estructura de proyecto sugerida
 
@@ -258,9 +332,10 @@ src/
   Knowledge/
   Taxonomy/
   Discovery/
+  Frontend/
   Shared/
-templates/
-assets/
+templates/frontend/
+frontend/
 config/
 migrations/
 tests/
@@ -278,7 +353,9 @@ Dentro de cada módulo:
 ### 13.1 Unit tests
 
 - slugification
+- generación de códigos automáticos de 12 caracteres para slugs
 - sanitización
+- apertura de enlaces renderizados en pestaña nueva
 - reglas de creación de revisiones
 - restauración de revisiones
 
@@ -287,22 +364,22 @@ Dentro de cada módulo:
 - repositorios Doctrine
 - servicios de aplicación
 - autenticación y seguridad
+- contratos JSON de endpoints principales
 
 ### 13.3 Functional tests
 
-- registro
-- login
-- creación de página
-- edición de página
-- creación inline de categoría
-- histórico de revisiones
-- restauración
+- shell React cargando correctamente
+- registro JSON
+- login JSON
+- creación de página vía API
+- lectura de HTML renderizado en lugar de Markdown crudo
+- histórico y restauración
 - búsqueda
 
 ## 14. Observabilidad y operación
 
 - logs estructurados a stdout para Docker
-- páginas de error amigables
+- errores JSON coherentes en API
 - healthcheck HTTP
 - comando CLI para crear usuarios
 - comando CLI para recalcular HTML si cambia el pipeline Markdown
@@ -315,6 +392,7 @@ Servicios previstos:
 - `web`: Nginx
 - `db`: MySQL
 - `worker`: Messenger consumer
+- `frontend build`: etapa de build Node/Vite integrada en imágenes Docker
 
 Ficheros previstos:
 

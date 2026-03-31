@@ -2,11 +2,11 @@
 
 ## 1. Visión
 
-Foedex es una wiki colaborativa inspirada en la simplicidad de edición de Notion, centrada en páginas Markdown, enlaces de conocimiento y organización por categorías. El objetivo es permitir que cualquier persona registrada pueda compartir y mejorar conocimiento colectivo sin jerarquías de administración.
+Foedex es una wiki colaborativa inspirada en la simplicidad de edición de Notion, centrada en páginas escritas con editor Markdown, enlaces de conocimiento y organización por categorías. El objetivo es permitir que cualquier persona registrada pueda compartir y mejorar conocimiento colectivo sin jerarquías de administración.
 
 ## 2. Objetivos del producto
 
-- Facilitar creación rápida de contenido en Markdown.
+- Facilitar creación rápida de contenido con editor Markdown, sin exponer Markdown crudo en lectura.
 - Organizar conocimiento por categorías reutilizables.
 - Permitir colaboración abierta entre usuarios autenticados.
 - Mantener trazabilidad total de cambios y autores.
@@ -66,16 +66,22 @@ Foedex es una wiki colaborativa inspirada en la simplicidad de edición de Notio
   - enlaces externos opcionales
 - Editar cualquier página existente.
 - Ver página renderizada con HTML sanitizado.
+- Mostrar en portada y listados contenido interpretado desde Markdown, nunca Markdown crudo.
+- El título visible de una página no puede superar 60 caracteres.
 - Ver metadatos:
   - autor de creación
   - última persona editora
   - fechas de creación y actualización
   - categorías asociadas
+- Desde la portada, un usuario autenticado puede abrir el editor de cualquier página.
+- Desde la portada, un usuario autenticado puede borrar solo páginas creadas por sí mismo.
 
 ### 6.3 Editor Markdown
 
 - Editor con sintaxis Markdown.
-- Vista previa antes de guardar.
+- El editor es el único lugar donde se muestra el Markdown crudo.
+- Fuera del editor, el contenido siempre se presenta como HTML interpretado y sanitizado.
+- Vista previa antes de guardar o renderizado de apoyo si entra en alcance.
 - Validación mínima de campos requeridos.
 - Soporte inicial para:
   - encabezados
@@ -112,13 +118,48 @@ Foedex es una wiki colaborativa inspirada en la simplicidad de edición de Notio
 
 ### 6.6 Descubrimiento y navegación
 
-- Portada con últimas páginas actualizadas.
+- Portada con últimas páginas actualizadas renderizadas a HTML.
 - Listado paginado de páginas.
 - Búsqueda simple por título y contenido.
 - Navegación por categorías.
 - Mostrar enlaces internos detectados entre páginas si el slug existe.
 
-### 6.7 Enlaces compartidos
+### 6.7 Captura rápida desde portada
+
+- Cuando el usuario ha iniciado sesión, la portada muestra un cuadro de captura rápida.
+- El cuadro permite pegar texto y enlaces, arrastrar y soltar imágenes o ficheros y seleccionar ficheros manualmente.
+- Todo el proceso debe ejecutarse sin recargar la página.
+- Si el usuario pega un enlace:
+  - el sistema accede al enlace
+  - extrae título, descripción e imagen destacada si existe
+  - crea una página Markdown con esa previsualización
+  - el título se trunca con puntos suspensivos si supera 60 caracteres
+  - el contenido generado no debe repetir ese título como encabezado Markdown
+- Si el usuario pega texto libre:
+  - el sistema crea una página rápida usando ese contenido como base
+- Si el usuario sube una imagen:
+  - el sistema la almacena
+  - genera thumbnail
+  - crea una página con la imagen incrustada y enlace de descarga
+- Si el usuario sube otro fichero permitido:
+  - el sistema crea una página con enlace de descarga al fichero
+- Las imágenes subidas deben poder abrirse en modal a tamaño completo con opción de descarga.
+
+### 6.8 Reglas especiales por plataforma
+
+- Si el enlace importado pertenece a Instagram:
+  - el contenido debe comenzar por la primera imagen encontrada
+  - esa imagen debe enlazar a la publicación original
+- Si el enlace importado pertenece a YouTube:
+  - el título visible de la página se trunca con puntos suspensivos si hace falta
+  - el contenido debe mostrar el título del vídeo antes del reproductor
+  - el vídeo debe quedar embebido dentro del post
+- Si el enlace importado pertenece a X o Twitter:
+  - el contenido no debe incluir encabezado Markdown con el título
+  - el cuerpo debe contener el texto del post en plano
+  - al final debe aparecer un enlace a la publicación original
+
+### 6.9 Enlaces compartidos
 
 - Una página puede contener enlaces externos relevantes.
 - Los enlaces viven dentro del contenido Markdown o como bloque opcional estructurado de referencias.
@@ -126,18 +167,30 @@ Foedex es una wiki colaborativa inspirada en la simplicidad de edición de Notio
 ## 7. Reglas de negocio
 
 - Solo usuarios autenticados pueden crear o editar.
+- Solo la persona creadora de una página puede borrarla.
 - Toda edición sobre una página existente debe crear revisión.
 - No se puede eliminar físicamente una revisión.
-- El slug de página es único y estable; puede cambiarse solo mediante edición explícita.
+- El borrado de página en el MVP es archivado lógico, no borrado físico.
+- El slug de página es único y estable; si no se define manualmente al crear, el sistema genera un código alfanumérico único de 12 caracteres.
+- El slug puede cambiarse solo mediante edición explícita.
+- El título manual no puede superar 60 caracteres.
 - Si se cambia el slug, deben mantenerse redirecciones desde slugs históricos.
 - Las categorías duplicadas deben evitarse por slug normalizado.
 - La restauración de una revisión debe registrar quién la ejecutó.
 - No se necesita aprobación para publicar o editar.
+- Las páginas archivadas no deben aparecer en portada, búsqueda, categorías ni detalle público.
+- La captura rápida debe bloquear URLs no públicas o inseguras.
+- La subida de ficheros debe aceptar solo tipos permitidos y tamaños limitados.
+- Los textos obtenidos de páginas externas deben limpiarse antes de mostrarse.
+- Todos los enlaces renderizados en la web deben abrirse en pestaña nueva.
 
 ## 8. Requisitos de calidad
 
 - Interfaz clara, rápida y utilizable en móvil y escritorio.
+- Frontend React desacoplado del backend Symfony mediante API HTTP.
 - Renderizado Markdown seguro frente a XSS.
+- Captura rápida segura frente a SSRF, XSS y subidas peligrosas.
+- La portada debe cargar las páginas completas de forma progresiva con infinity scroll.
 - Auditoría íntegra y consultable.
 - Rendimiento aceptable en listados e historial.
 - Accesibilidad básica AA en formularios y navegación.
@@ -173,3 +226,4 @@ Foedex es una wiki colaborativa inspirada en la simplicidad de edición de Notio
 - El MVP se enfoca en wiki colaborativa, no en bloques complejos tipo Notion.
 - La colaboración concurrente será secuencial, no en tiempo real.
 - La publicación será inmediata al guardar; no habrá borradores separados en la primera fase.
+- El frontend objetivo del producto es React consumiendo una API Symfony; Twig no es la capa principal de experiencia de usuario.

@@ -1,6 +1,6 @@
 # Foedex
 
-Foedex es una aplicación web colaborativa, construida con Symfony y MySQL, orientada a compartir conocimiento categorizado mediante páginas editables con Markdown. Cualquier usuario registrado puede crear páginas, editarlas, categorizarlas, enlazarlas y restaurar versiones anteriores desde el historial.
+Foedex es una aplicación web colaborativa, construida con React en frontend, Symfony como API y MySQL como base de datos, orientada a compartir conocimiento categorizado mediante páginas editables con Markdown. Cualquier usuario registrado puede crear páginas, editarlas, categorizarlas, enlazarlas y restaurar versiones anteriores desde el historial.
 
 El proyecto se desarrolla siguiendo Spec Driven Development. La documentación fuente de verdad está en:
 
@@ -12,10 +12,11 @@ El proyecto se desarrolla siguiendo Spec Driven Development. La documentación f
 
 - PHP 8.3
 - Symfony 8
+- React
+- Vite
 - MySQL 8.4
 - Nginx
 - Docker y Docker Compose
-- Twig para SSR
 - Doctrine ORM y Migrations
 - Symfony Security, Messenger y Validator
 
@@ -36,22 +37,39 @@ Entregar una wiki colaborativa funcional donde:
 - cualquier usuario autenticado pueda crear, editar y categorizar páginas;
 - toda edición genere una revisión con autoría y diff;
 - se pueda consultar el histórico y restaurar versiones previas;
-- las páginas se puedan descubrir por categorías, enlaces internos y búsqueda básica.
+- las páginas se puedan descubrir por categorías, enlaces internos y búsqueda básica;
+- la lectura pública y privada muestre HTML interpretado y nunca Markdown crudo fuera del editor.
 
 ## Estado implementado
 
 La base del proyecto ya está funcionando y validada en Docker. Ahora mismo incluye:
 
-- registro, login y edición de perfil;
-- creación, edición y visualización de páginas Markdown;
+- frontend React servido por Symfony + Nginx;
+- endpoints JSON para sesión, registro, perfil, páginas y categorías;
+- registro, login por sesión y edición de perfil;
+- creación, edición y visualización de páginas Markdown con render HTML en lectura;
+- captura rápida en portada para pegar enlaces y texto sin recarga;
+- subida de imágenes y ficheros con páginas automáticas;
+- thumbnails y modal de imagen para assets visuales;
 - categorías colaborativas en selección o creación inline;
 - historial de revisiones, diff textual y restauración;
 - slugs históricos con redirección;
+- slugs automáticos de 12 caracteres para páginas nuevas si no se define uno manualmente;
+- títulos limitados a 60 caracteres con truncado seguro en importaciones automáticas;
 - búsqueda simple desde la portada;
 - comandos `app:user:create` y `app:pages:rebuild-html`;
-- migración inicial validada sobre MySQL y tests básicos.
+- build frontend integrado en Docker y tests básicos.
 
 En desarrollo local, la aplicación queda publicada en `http://127.0.0.1:8081`.
+
+## Experiencia de contenido
+
+- El contenido se escribe en Markdown solo dentro del editor.
+- La portada, listados, categorías y detalle de página consumen HTML interpretado desde la API.
+- El Markdown crudo no se muestra en la web fuera del editor.
+- La portada puede convertir enlaces pegados en páginas automáticas con previsualización enriquecida.
+- Los enlaces renderizados en lectura se abren en pestaña nueva.
+- La portada carga páginas completas con infinity scroll para no traer todo de golpe.
 
 ## Despliegue en servidor con Docker
 
@@ -108,13 +126,13 @@ Si se usa proxy externo con TLS, la variable del host debe reflejar el dominio p
 ### 4. Levantar los contenedores
 
 ```bash
-docker compose -f compose.yaml -f compose.prod.yaml up -d --build
+docker compose --env-file .env.prod.local -f compose.yaml -f compose.prod.yaml up -d --build
 ```
 
 El despliegue final debería incluir, como mínimo:
 
-- `app`: PHP-FPM con Symfony
-- `web`: Nginx sirviendo la aplicación
+- `app`: PHP-FPM con Symfony API
+- `web`: Nginx sirviendo frontend React y assets públicos
 - `db`: MySQL
 - `worker`: proceso Messenger para trabajos asíncronos
 
@@ -123,9 +141,7 @@ El despliegue final debería incluir, como mínimo:
 La imagen de producción ya instala dependencias durante el build. Después ejecuta:
 
 ```bash
-docker compose exec app php bin/console doctrine:migrations:migrate --no-interaction
-docker compose exec app php bin/console cache:clear
-docker compose exec app php bin/console cache:warmup
+docker compose --env-file .env.prod.local -f compose.yaml -f compose.prod.yaml exec app php bin/console doctrine:migrations:migrate --no-interaction
 ```
 
 ### 6. Crear el primer usuario
@@ -133,7 +149,7 @@ docker compose exec app php bin/console cache:warmup
 El proyecto debería exponer un comando de consola para bootstrap del primer usuario:
 
 ```bash
-docker compose exec app php bin/console app:user:create admin@example.com "Nombre Visible" "ChangeMeNow123!"
+docker compose --env-file .env.prod.local -f compose.yaml -f compose.prod.yaml exec app php bin/console app:user:create admin@example.com "Nombre Visible" "ChangeMeNow123!"
 ```
 
 Aunque no existan administradores, este comando sirve para crear el primer usuario operativo del sistema.
@@ -143,17 +159,18 @@ Aunque no existan administradores, este comando sirve para crear el primer usuar
 Comprueba que los contenedores estén sanos:
 
 ```bash
-docker compose ps
-docker compose logs -f app
-docker compose logs -f web
+docker compose --env-file .env.prod.local -f compose.yaml -f compose.prod.yaml ps
+docker compose --env-file .env.prod.local -f compose.yaml -f compose.prod.yaml logs -f app
+docker compose --env-file .env.prod.local -f compose.yaml -f compose.prod.yaml logs -f web
 ```
 
 Puntos a verificar:
 
-- la página principal carga;
+- la SPA React carga;
 - el registro funciona;
 - se puede iniciar sesión;
-- se puede crear una página;
+- se puede crear una página desde el editor;
+- la portada y el detalle muestran HTML renderizado;
 - se genera historial al editarla.
 
 ### 8. Actualizar la aplicación
@@ -163,10 +180,8 @@ Para desplegar cambios futuros:
 ```bash
 cd /opt/foedex
 git pull
-docker compose -f compose.yaml -f compose.prod.yaml up -d --build
-docker compose exec app php bin/console doctrine:migrations:migrate --no-interaction
-docker compose exec app php bin/console cache:clear
-docker compose exec app php bin/console cache:warmup
+docker compose --env-file .env.prod.local -f compose.yaml -f compose.prod.yaml up -d --build
+docker compose --env-file .env.prod.local -f compose.yaml -f compose.prod.yaml exec app php bin/console doctrine:migrations:migrate --no-interaction
 ```
 
 ### 9. Copias de seguridad

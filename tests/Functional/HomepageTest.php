@@ -9,9 +9,11 @@ final class HomepageTest extends WebTestCase
     public function testHomepageLoads(): void
     {
         $client = static::createClient();
-        $client->request('GET', '/');
+        $crawler = $client->request('GET', '/');
 
         self::assertResponseIsSuccessful();
-        self::assertSelectorTextContains('body', 'Foedex');
+        self::assertSame('Foedex', $crawler->filter('title')->text());
+        self::assertCount(1, $crawler->filter('#root'));
+        self::assertStringStartsWith('/app/app.js?v=', (string) $crawler->filter('script[type="module"]')->attr('src'));
     }
 }

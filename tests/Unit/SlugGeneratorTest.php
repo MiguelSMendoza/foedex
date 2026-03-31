@@ -16,4 +16,12 @@ final class SlugGeneratorTest extends TestCase
         self::assertSame('arquitectura-symfony-y-mysql', $slugger->slugify('Arquitectura Symfony y MySQL'));
         self::assertSame('categoria-con-n', $slugger->slugify('Categoría con ñ'));
     }
+
+    public function testGenerateCodeReturnsTwelveAlphanumericCharacters(): void
+    {
+        $slugger = new SlugGenerator();
+        $code = $slugger->generateCode();
+
+        self::assertMatchesRegularExpression('/^[a-z0-9]{12}$/', $code);
+    }
 }

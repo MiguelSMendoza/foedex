@@ -15,19 +15,22 @@ security:
         main:
             lazy: true
             provider: app_user_provider
-            form_login:
-                login_path: app_login
-                check_path: app_login
-                enable_csrf: true
-                default_target_path: app_home
+            entry_point: App\Shared\Security\ApiAuthenticationEntryPoint
+            access_denied_handler: App\Shared\Security\ApiAccessDeniedHandler
+            json_login:
+                check_path: api_login
+                username_path: email
+                password_path: password
             logout:
-                path: app_logout
+                path: api_logout
 
     access_control:
-        - { path: ^/profile, roles: ROLE_USER }
-        - { path: ^/pages/new, roles: ROLE_USER }
-        - { path: ^/pages/.+/edit, roles: ROLE_USER }
-        - { path: ^/pages/.+/revisions/\d+/restore, roles: ROLE_USER }
+        - { path: ^/api/profile, roles: ROLE_USER }
+        - { path: ^/api/logout, roles: ROLE_USER }
+        - { path: ^/api/quick-create, roles: ROLE_USER }
+        - { path: ^/api/pages$, roles: ROLE_USER, methods: [POST] }
+        - { path: ^/api/pages/.+/editor$, roles: ROLE_USER }
+        - { path: ^/api/pages/.+$, roles: ROLE_USER, methods: [PUT, PATCH] }
 
 when@test:
     security:

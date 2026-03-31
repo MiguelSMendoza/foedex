@@ -22,14 +22,14 @@ final class PageType extends AbstractType
                 'label' => 'Título',
                 'constraints' => [
                     new Assert\NotBlank(),
-                    new Assert\Length(min: 3, max: 160),
+                    new Assert\Length(min: 3, max: 60),
                 ],
             ])
             ->add('slug', TextType::class, [
                 'label' => 'Slug',
                 'required' => false,
                 'empty_data' => '',
-                'help' => 'Si lo dejas vacío, se genera a partir del título.',
+                'help' => 'Si lo dejas vacío, se genera un código único de 12 caracteres.',
             ])
             ->add('excerpt', TextareaType::class, [
                 'label' => 'Extracto',

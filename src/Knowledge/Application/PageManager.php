@@ -8,6 +8,7 @@ use App\Identity\Domain\User;
 use App\Knowledge\Domain\Page;
 use App\Knowledge\Domain\PageRevision;
 use App\Knowledge\Domain\PageSlugRedirect;
+use App\Knowledge\Infrastructure\Persistence\Doctrine\PageRepository;
 use App\Knowledge\UI\Web\Form\PageData;
 use App\Shared\Application\SlugGenerator;
 use App\Shared\Infrastructure\Markdown\MarkdownRenderer;
@@ -22,6 +23,7 @@ final class PageManager
         private readonly MarkdownRenderer $markdownRenderer,
         private readonly SlugGenerator $slugGenerator,
         private readonly CategoryRepository $categoryRepository,
+        private readonly PageRepository $pageRepository,
     ) {
     }
 
@@ -57,7 +59,9 @@ final class PageManager
 
     public function create(PageData $data, User $actor, string $newCategories): Page
     {
-        $slug = $data->slug !== '' ? $this->slugGenerator->slugify($data->slug) : $this->slugGenerator->slugify($data->title);
+        $slug = trim($data->slug) !== ''
+            ? $this->resolveUniqueSlug($data->slug)
+            : $this->generateUniqueAutomaticSlug();
         $html = $this->markdownRenderer->toSanitizedHtml($data->markdown);
 
         $page = (new Page())
@@ -86,7 +90,9 @@ final class PageManager
     public function update(Page $page, PageData $data, User $actor, string $newCategories): Page
     {
         $oldSlug = $page->getCurrentSlug();
-        $newSlug = $data->slug !== '' ? $this->slugGenerator->slugify($data->slug) : $this->slugGenerator->slugify($data->title);
+        $newSlug = trim($data->slug) !== ''
+            ? $this->resolveUniqueSlug($data->slug, $page->getId())
+            : $oldSlug;
 
         $page
             ->setCurrentTitle($data->title)
@@ -160,5 +166,28 @@ final class PageManager
             ->setChangeSummary($summary)
             ->setAuthor($actor)
             ->replaceCategories($page->getCategories());
+    }
+
+    private function resolveUniqueSlug(string $value, ?int $ignorePageId = null): string
+    {
+        $baseSlug = $this->slugGenerator->slugify($value);
+        $slug = $baseSlug;
+        $suffix = 2;
+
+        while ($this->pageRepository->slugExists($slug, $ignorePageId)) {
+            $slug = sprintf('%s-%d', $baseSlug, $suffix);
+            ++$suffix;
+        }
+
+        return $slug;
+    }
+
+    private function generateUniqueAutomaticSlug(): string
+    {
+        do {
+            $slug = $this->slugGenerator->generateCode();
+        } while ($this->pageRepository->slugExists($slug));
+
+        return $slug;
     }
 }

@@ -5,35 +5,37 @@ declare(strict_types=1);
 namespace App\Identity\UI\Web\Controller;
 
 use App\Identity\Domain\User;
-use App\Identity\UI\Web\Form\ProfileFormType;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
+use App\Shared\UI\Api\ApiViewFactory;
 
 #[IsGranted('ROLE_USER')]
 final class ProfileController extends AbstractController
 {
-    #[Route('/profile', name: 'app_profile')]
-    public function __invoke(Request $request, EntityManagerInterface $entityManager): Response
+    #[Route('/api/profile', name: 'api_profile', methods: ['GET', 'PATCH'])]
+    public function __invoke(
+        Request $request,
+        EntityManagerInterface $entityManager,
+        ApiViewFactory $apiViewFactory,
+    ): JsonResponse
     {
         /** @var User $user */
         $user = $this->getUser();
 
-        $form = $this->createForm(ProfileFormType::class, $user);
-        $form->handleRequest($request);
-
-        if ($form->isSubmitted() && $form->isValid()) {
+        if ($request->isMethod('PATCH')) {
+            $payload = $request->toArray();
+            $user
+                ->setDisplayName((string) ($payload['displayName'] ?? $user->getDisplayName()))
+                ->setBio(array_key_exists('bio', $payload) ? (string) $payload['bio'] : $user->getBio());
             $entityManager->flush();
-            $this->addFlash('success', 'Perfil actualizado.');
-
-            return $this->redirectToRoute('app_profile');
         }
 
-        return $this->render('profile/show.html.twig', [
-            'profileForm' => $form->createView(),
+        return new JsonResponse([
+            'user' => $apiViewFactory->user($user),
         ]);
     }
 }

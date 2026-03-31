@@ -28,7 +28,7 @@ class Page
 
     #[ORM\Column(length: 160)]
     #[Assert\NotBlank]
-    #[Assert\Length(min: 3, max: 160)]
+    #[Assert\Length(min: 3, max: 60)]
     private string $currentTitle = '';
 
     #[ORM\Column(type: 'text', nullable: true)]
@@ -67,6 +67,9 @@ class Page
     #[ORM\OrderBy(['revisionNumber' => 'DESC'])]
     private Collection $revisions;
 
+    #[ORM\OneToMany(mappedBy: 'page', targetEntity: MediaAsset::class, orphanRemoval: true, cascade: ['persist'])]
+    private Collection $mediaAssets;
+
     public function __construct()
     {
         $now = new \DateTimeImmutable();
@@ -74,6 +77,7 @@ class Page
         $this->updatedAt = $now;
         $this->categories = new ArrayCollection();
         $this->revisions = new ArrayCollection();
+        $this->mediaAssets = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -187,6 +191,14 @@ class Page
         return $this;
     }
 
+    public function archive(): self
+    {
+        $this->isArchived = true;
+        $this->updatedAt = new \DateTimeImmutable();
+
+        return $this;
+    }
+
     /**
      * @return Collection<int, Category>
      */
@@ -231,6 +243,24 @@ class Page
         if (!$this->revisions->contains($revision)) {
             $this->revisions->add($revision);
             $revision->setPage($this);
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, MediaAsset>
+     */
+    public function getMediaAssets(): Collection
+    {
+        return $this->mediaAssets;
+    }
+
+    public function addMediaAsset(MediaAsset $mediaAsset): self
+    {
+        if (!$this->mediaAssets->contains($mediaAsset)) {
+            $this->mediaAssets->add($mediaAsset);
+            $mediaAsset->setPage($this);
         }
 
         return $this;

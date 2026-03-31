@@ -5,48 +5,47 @@ declare(strict_types=1);
 namespace App\Identity\UI\Web\Controller;
 
 use App\Identity\Domain\User;
-use App\Identity\UI\Web\Form\RegistrationFormData;
-use App\Identity\UI\Web\Form\RegistrationFormType;
 use Doctrine\ORM\EntityManagerInterface;
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 
-final class RegistrationController extends AbstractController
+final class RegistrationController
 {
-    #[Route('/register', name: 'app_register')]
+    #[Route('/api/register', name: 'api_register', methods: ['POST'])]
     public function __invoke(
         Request $request,
         EntityManagerInterface $entityManager,
         UserPasswordHasherInterface $passwordHasher,
-    ): Response {
-        if ($this->getUser()) {
-            return $this->redirectToRoute('app_home');
+        ValidatorInterface $validator,
+    ): JsonResponse {
+        $payload = $request->toArray();
+
+        $email = mb_strtolower(trim((string) ($payload['email'] ?? '')));
+        $displayName = trim((string) ($payload['displayName'] ?? ''));
+        $plainPassword = (string) ($payload['password'] ?? '');
+
+        if ($email === '' || $displayName === '' || $plainPassword === '') {
+            return new JsonResponse(['message' => 'Email, nombre y contraseña son obligatorios.'], 422);
         }
 
-        $data = new RegistrationFormData();
-        $form = $this->createForm(RegistrationFormType::class, $data);
-        $form->handleRequest($request);
+        $user = (new User())
+            ->setEmail($email)
+            ->setDisplayName($displayName);
 
-        if ($form->isSubmitted() && $form->isValid()) {
-            $user = (new User())
-                ->setEmail($data->email)
-                ->setDisplayName($data->displayName);
+        $user->setPassword($passwordHasher->hashPassword($user, $plainPassword));
 
-            $user->setPassword($passwordHasher->hashPassword($user, $data->plainPassword));
+        $violations = $validator->validate($user);
 
-            $entityManager->persist($user);
-            $entityManager->flush();
-
-            $this->addFlash('success', 'Tu cuenta ya está creada. Ahora puedes iniciar sesión.');
-
-            return $this->redirectToRoute('app_login');
+        if (\count($violations) > 0) {
+            return new JsonResponse(['message' => (string) $violations[0]->getMessage()], 422);
         }
 
-        return $this->render('registration/register.html.twig', [
-            'registrationForm' => $form->createView(),
-        ]);
+        $entityManager->persist($user);
+        $entityManager->flush();
+
+        return new JsonResponse(['message' => 'Cuenta creada. Ya puedes iniciar sesión.'], 201);
     }
 }

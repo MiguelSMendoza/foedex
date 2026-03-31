@@ -12,17 +12,15 @@ final class RegistrationTest extends WebTestCase
     public function testUserCanRegister(): void
     {
         $client = static::createClient();
-        $crawler = $client->request('GET', '/register');
+        $client->request('POST', '/api/register', [], [], [
+            'CONTENT_TYPE' => 'application/json',
+        ], json_encode([
+            'displayName' => 'Miguel',
+            'email' => 'miguel@example.com',
+            'password' => 'ChangeMe1234',
+        ], \JSON_THROW_ON_ERROR));
 
-        $form = $crawler->selectButton('Registrarme')->form([
-            'registration_form[displayName]' => 'Miguel',
-            'registration_form[email]' => 'miguel@example.com',
-            'registration_form[plainPassword]' => 'ChangeMe1234',
-        ]);
-
-        $client->submit($form);
-
-        self::assertResponseRedirects('/login');
+        self::assertResponseStatusCodeSame(201);
 
         /** @var EntityManagerInterface $entityManager */
         $entityManager = static::getContainer()->get(EntityManagerInterface::class);

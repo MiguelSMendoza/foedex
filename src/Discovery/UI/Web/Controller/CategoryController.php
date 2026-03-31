@@ -4,28 +4,39 @@ declare(strict_types=1);
 
 namespace App\Discovery\UI\Web\Controller;
 
+use App\Knowledge\Domain\Page;
 use App\Taxonomy\Domain\Category;
+use App\Shared\UI\Api\ApiViewFactory;
 use App\Taxonomy\Infrastructure\Persistence\Doctrine\CategoryRepository;
 use Symfony\Bridge\Doctrine\Attribute\MapEntity;
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Attribute\Route;
 
-final class CategoryController extends AbstractController
+final class CategoryController
 {
-    #[Route('/categories', name: 'app_category_index')]
-    public function index(CategoryRepository $categoryRepository): Response
+    #[Route('/api/categories', name: 'api_category_index', methods: ['GET'])]
+    public function index(CategoryRepository $categoryRepository, ApiViewFactory $apiViewFactory): JsonResponse
     {
-        return $this->render('category/index.html.twig', [
-            'categories' => $categoryRepository->findAllAlphabetical(),
+        return new JsonResponse([
+            'categories' => array_map($apiViewFactory->category(...), $categoryRepository->findAllAlphabetical()),
         ]);
     }
 
-    #[Route('/categories/{slug}', name: 'app_category_show')]
-    public function show(#[MapEntity(mapping: ['slug' => 'slug'])] Category $category): Response
+    #[Route('/api/categories/{slug}', name: 'api_category_show', methods: ['GET'])]
+    public function show(
+        #[MapEntity(mapping: ['slug' => 'slug'])] Category $category,
+        ApiViewFactory $apiViewFactory,
+    ): JsonResponse
     {
-        return $this->render('category/show.html.twig', [
-            'category' => $category,
+        return new JsonResponse([
+            'category' => $apiViewFactory->category($category),
+            'pages' => array_map(
+                $apiViewFactory->page(...),
+                array_values(array_filter(
+                    $category->getPages()->toArray(),
+                    static fn (mixed $page): bool => $page instanceof Page && !$page->isArchived(),
+                )),
+            ),
         ]);
     }
 }

@@ -8,6 +8,7 @@
 # https://symfony.com/doc/current/best_practices.html#use-parameters-for-application-configuration
 parameters:
     app.name: 'Foedex'
+    app.uploads_public_dir: '%kernel.project_dir%/public/uploads'
 
 services:
     # default configuration for services in *this* file
@@ -21,6 +22,10 @@ services:
         resource: '../src/'
         exclude:
             - '../src/Kernel.php'
+
+    App\Knowledge\Application\MediaStorage:
+        arguments:
+            $projectDir: '%kernel.project_dir%'
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones

@@ -8,15 +8,17 @@ Las tareas están organizadas por fases para construir el proyecto de forma incr
 
 ### Objetivo
 
-Dejar una base Symfony operativa, dockerizada y lista para desarrollo.
+Dejar una base Symfony API + React operativa, dockerizada y lista para desarrollo.
 
 ### Tareas
 
 - Inicializar repositorio Git si todavía no existe.
 - Crear proyecto Symfony base.
+- Crear base frontend React con Vite.
 - Configurar PHP CS Fixer o ECS.
 - Configurar PHPStan.
 - Configurar PHPUnit.
+- Configurar build frontend y salida estática en `public/app`.
 - Configurar Dockerfile para `app`.
 - Configurar Nginx para `web`.
 - Configurar `compose.yaml` para desarrollo.
@@ -47,19 +49,20 @@ Permitir registro y autenticación seguras.
 
 ### Objetivo
 
-Permitir creación y visualización de páginas Markdown.
+Permitir creación y visualización de páginas Markdown con lectura en HTML interpretado.
 
 ### Tareas
 
 - Modelar entidad `Page`.
 - Implementar slugifier reutilizable.
-- Implementar formulario de creación de página.
+- Implementar endpoint de creación de página.
 - Implementar renderizado Markdown a HTML.
 - Implementar sanitización de HTML.
 - Persistir estado actual materializado de la página.
-- Crear vista de detalle de página.
-- Crear listado paginado de páginas.
-- Crear portada con últimas páginas editadas.
+- Crear detalle React de página.
+- Crear listado API de páginas.
+- Crear portada React con últimas páginas editadas.
+- Garantizar que la portada renderiza HTML derivado del Markdown, nunca Markdown crudo.
 - Añadir tests unitarios e integración del pipeline Markdown.
 
 ## 5. Fase 3 - Categorías
@@ -129,19 +132,48 @@ Facilitar encontrar conocimiento relevante.
 - Añadir filtros por categoría si entra en MVP.
 - Añadir tests funcionales de búsqueda.
 
+## 8.1 Fase 6B - Captura rápida e ingesta
+
+### Objetivo
+
+Permitir creación automática de páginas desde la portada mediante pegado, drag-and-drop y subida segura de ficheros.
+
+### Tareas
+
+- Añadir panel React de captura rápida visible solo para usuarios autenticados.
+- Implementar creación rápida desde texto libre.
+- Implementar creación rápida desde URL pegada.
+- Implementar extractor seguro de título, descripción e imagen destacada.
+- Truncar títulos automáticos a 60 caracteres con puntos suspensivos.
+- Evitar repetir el título automático dentro del Markdown generado.
+- Añadir reglas especiales de importación para Instagram y X/Twitter.
+- Añadir regla especial de importación y embed para YouTube.
+- Añadir protección frente a SSRF y hosts no públicos.
+- Modelar `MediaAsset` para imágenes y ficheros asociados a páginas.
+- Implementar subida segura de imágenes y ficheros permitidos.
+- Generar thumbnails para imágenes subidas.
+- Persistir assets y servirlos desde `public/uploads`.
+- Mostrar thumbnails en la portada y detalle.
+- Abrir imágenes en modal con enlace de descarga.
+- Forzar apertura en pestaña nueva para enlaces renderizados.
+- Añadir tests unitarios e integración de captura rápida.
+
 ## 9. Fase 7 - UX editorial
 
 ### Objetivo
 
-Hacer la creación y edición cómodas para uso real.
+Hacer la creación y edición cómodas para uso real dentro de un frontend React.
 
 ### Tareas
 
-- Añadir preview en vivo o preview previa al guardado.
+- Añadir preview en vivo o render auxiliar si entra en alcance.
 - Añadir ayuda de sintaxis Markdown.
 - Mejorar mensajes de validación.
+- Convertir la portada en feed de contenido completo con infinity scroll.
 - Añadir confirmación clara al restaurar revisiones.
 - Añadir indicadores de última edición y autoría.
+- Añadir acciones rápidas en portada para editar cualquier página.
+- Añadir borrado lógico en portada solo para la persona creadora de cada página.
 - Revisar responsive de páginas clave.
 - Revisar accesibilidad básica.
 
@@ -154,6 +186,8 @@ Asegurar que el sistema se despliega y mantiene sin fricción.
 ### Tareas
 
 - Crear `Dockerfile` multi-stage.
+- Integrar build frontend Node/Vite en Docker.
+- Compartir almacenamiento de uploads entre `app` y `web` en producción.
 - Endurecer imagen de producción.
 - Configurar healthcheck.
 - Configurar worker Messenger.
