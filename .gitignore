@@ -22,3 +22,6 @@
 # Local runtime data and private notes
 /memory/
 /public/uploads/
+/BOOTSTRAP.md
+/MEMORY.md
+/.agents/
